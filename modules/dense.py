@@ -1,4 +1,5 @@
 from modules.utils import *
+from cython_modules.dense import dense_forward_cython  # Se importa la versión optimizada en Cython
 from modules.layer import Layer
 
 import numpy as np
@@ -24,12 +25,11 @@ class Dense(Layer):
         self.input = None
 
     def forward(self, input, training=True):  # input: [batch_size x in_features]
-        self.input = np.array(input).astype(np.float32)  # Ensure input is float for numerical stability
-        batch_size = self.input.shape[0]
+        self.input = np.array(input, dtype=np.float32)  # Fuerza float32 en la entrada
+        self.weights = np.array(self.weights, dtype=np.float32)  # Fuerza float32 en los pesos
+        self.biases = np.array(self.biases, dtype=np.float32)  # Fuerza float32 en los bias
 
-        output = np.zeros((batch_size, self.out_features),dtype=np.float32)
- 
-        output = matmul_biasses(self.input, self.weights, output, self.biases)
+        output = dense_forward_cython(self.input, self.weights, self.biases) # Llamada a la implementación en Cython
         self.output = output
         return output
 
